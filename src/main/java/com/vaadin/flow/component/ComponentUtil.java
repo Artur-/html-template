@@ -31,6 +31,7 @@ import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.internal.ComponentMetaData;
 import com.vaadin.flow.component.internal.ComponentMetaData.DependencyInfo;
 import com.vaadin.flow.component.internal.ComponentMetaData.SynchronizedPropertyInfo;
+import com.vaadin.flow.di.DefaultInstantiator;
 import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.dom.DomEvent;
 import com.vaadin.flow.dom.DomListenerRegistration;
@@ -421,12 +422,19 @@ public class ComponentUtil {
         try {
             Component.elementToMapTo.set(wrapData);
             UI ui = UI.getCurrent();
+            Instantiator instantiator;
             if (ui == null) {
-                throw new IllegalStateException("UI instance is not available. "
-                        + "It looks like you are trying to execute UI code outside the UI/Servlet dispatching thread");
+                instantiator = new DefaultInstantiator(null);
+                // throw new IllegalStateException("UI instance is not available. "
+                //         + "It looks like you are trying to execute UI code outside the UI/Servlet dispatching thread");
+            } else {
+                instantiator = Instantiator.get(ui);
             }
-            Instantiator instantiator = Instantiator.get(ui);
-            return instantiator.createComponent(componentType);
+            T component = instantiator.createComponent(componentType);
+            if (component instanceof AttributeReader) {
+                ((AttributeReader)component).readAttributes();
+            }
+            return component;
         } finally {
             // This should always be cleared, normally it's cleared in Component
             // but in case of exception it might be not cleared
