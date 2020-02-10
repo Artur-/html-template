@@ -36,7 +36,7 @@ import com.vaadin.flow.shared.util.SharedUtil;
  * set as the field value.
  */
 @Tag("div")
-public abstract class HtmlTemplate extends Component {
+public class HtmlTemplate extends Component {
     private static final String USE_CLASS_AS_URL = "__USE_CLASS_AS_URL__";
     private static ConcurrentHashMap<String, Document> parserCache = new ConcurrentHashMap<>();
 
@@ -48,6 +48,9 @@ public abstract class HtmlTemplate extends Component {
         this(USE_CLASS_AS_URL);
     }
 
+    public static HtmlTemplate create(String html) {
+        return new HtmlTemplate("data:"+html);
+    }
     /**
      * Creates a new HTML template based on the given HTML template URL. The
      * template is loaded from the classpath relative to the location of the
@@ -109,16 +112,22 @@ public abstract class HtmlTemplate extends Component {
     }
 
     private static Document readTemplate(Class<?> origin, String url) {
+        String content;
+        if (url.startsWith("data:")) {
+            content =  url.substring("data:".length());
+        } else {
         try (InputStream resourceAsStream = origin.getResourceAsStream(url)) {
             if (resourceAsStream == null) {
                 throw new IllegalArgumentException(
                         "Could not find " + url + " on the classpath relative to the class " + origin.getName());
             }
-            return Jsoup.parseBodyFragment(
-                    StandardCharsets.UTF_8.decode(DataUtil.readToByteBuffer(resourceAsStream, 0)).toString());
+            content = StandardCharsets.UTF_8.decode(DataUtil.readToByteBuffer(resourceAsStream, 0)).toString();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
+        }}
+        return Jsoup.parseBodyFragment(content
+            );
+
     }
 
     private void convertAndAppend(org.jsoup.nodes.Element jsoupElement, com.vaadin.flow.dom.Node<?> flowNode,
