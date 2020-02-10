@@ -67,7 +67,7 @@ public abstract class HtmlTemplate extends Component {
 
         Map<String, Element> idMap = new HashMap<>();
 
-        convertAndAppend(document.body(), getElement().attachShadow(), idMap::put);
+        convertAndAppend(document.body(), getElement(), idMap::put);
 
         for (Field field : getClass().getDeclaredFields()) {
             AnnotationReader.getAnnotationFor(field, Id.class).map(Id::value).ifPresent(id -> {
